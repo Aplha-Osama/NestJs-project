@@ -19,8 +19,11 @@ model User {
   lastName  String?
   bookmarks Bookmark[]
 
-  //  relationShip with Product many to many
-  products Product[] @relation("UserProducts")
+  //  relation with Product one to Many as a seller
+  products Product[]
+
+  // relation with order table m-n
+  orders UserOrder[]
 
   @@map("users")
 }
@@ -41,21 +44,51 @@ model Bookmark {
 }
 
 model Product {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  price     Float
-  sale      Boolean  @default(false)
+  id           Int          @id @default(autoincrement())
+  name         String       @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  price        Float
+  sale         Boolean      @default(false)
   availability Availability
 
+  // relation with User Model one to one
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
-  //  relationShip with User Model Many to Many
-  user User[] @relation("UserProducts")
-  
+  // relation b/w product and order  one to many 
+  orders Order[]
 }
 
-enum Availability {  
+enum Availability {
   IN_STORE
   ONLINE
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  orderNumber String      @unique
+  totalPrice  Float
+  status      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userId      Int // Foreign key reference to User
+  users       UserOrder[]
+
+  // relation b/w product and order  one to many 
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model UserOrder {
+  id Int @id @default(autoincrement())
+
+  userId  Int // Foreign key reference to User
+  orderId Int // Foreign key reference to Order
+
+  user User @relation(fields: [userId], references: [id])
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@unique([userId, orderId])
 }
